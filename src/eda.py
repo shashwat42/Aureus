@@ -5,9 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# Paths
-DATASET_DIR = '../dataset/'
-OUTPUTS_DIR = '../outputs/'
+# Paths (project-root-relative)
+DATASET_DIR = 'dataset'
+OUTPUTS_DIR = 'outputs'
 TRAIN_FILE = os.path.join(DATASET_DIR, 'train.csv')
 TEST_FILE = os.path.join(DATASET_DIR, 'test.csv')
 
@@ -46,6 +46,7 @@ plt.hist(train['price'], bins=50, color='skyblue', edgecolor='black')
 plt.xlabel('Price')
 plt.ylabel('Frequency')
 plt.title('Price Distribution (Training Set)')
+plt.tight_layout()
 plt.savefig(os.path.join(OUTPUTS_DIR, 'price_distribution.png'))
 plt.close()
 
@@ -63,14 +64,16 @@ with open(os.path.join(OUTPUTS_DIR, 'train_outlier_sample_ids.txt'), 'w') as f:
         f.write(f"{i}\n")
 
 # Distribution of catalog_content length
-train['content_len'] = train['catalog_content'].str.len()
-plt.figure(figsize=(8,5))
-plt.hist(train['content_len'], bins=50, color='orange', edgecolor='black')
-plt.xlabel('Catalog Content Length')
-plt.ylabel('Frequency')
-plt.title('catalog_content Length Distribution')
-plt.savefig(os.path.join(OUTPUTS_DIR, 'content_length_distribution.png'))
-plt.close()
+if 'catalog_content' in train:
+    train['content_len'] = train['catalog_content'].str.len()
+    plt.figure(figsize=(8,5))
+    plt.hist(train['content_len'], bins=50, color='orange', edgecolor='black')
+    plt.xlabel('Catalog Content Length')
+    plt.ylabel('Frequency')
+    plt.title('catalog_content Length Distribution')
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUTS_DIR, 'content_length_distribution.png'))
+    plt.close()
 
 # Save simple EDA summary
 summary = {
@@ -88,5 +91,4 @@ with open(summary_file, 'w') as f:
     for k, v in summary.items():
         f.write(f"{k}: {v}\n")
 
-print("\nEDA complete. Summary, plots, and outlier IDs saved in ../outputs/")
-
+print("\nEDA complete. Summary, plots, and outlier IDs saved in outputs/")
