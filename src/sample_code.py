@@ -1,44 +1,29 @@
 import os
-import random
+import numpy as np
 import pandas as pd
+import joblib
+from config import TEST_FEATURES_FILE, TEST_CLEAN_FILE, MODEL_FILE
 
-def predictor(sample_id, catalog_content, image_link):
-    '''
-    Call your model/approach here
-    
-    Parameters:
-    - sample_id: Unique identifier for the sample
-    - catalog_content: Text containing product title and description
-    - image_link: URL to product image
-    
-    Returns:
-    - price: Predicted price as a float
-    '''
-    # TODO: Implement your price prediction logic here
-    # This is just a dummy implementation
-    
-    # Generate random price between 5 and 500
-    return round(random.uniform(5.0, 500.0), 2)
+def predict_prices():
+    X_test = np.load(TEST_FEATURES_FILE)
+    test_df = pd.read_csv(TEST_CLEAN_FILE)
 
-if __name__ == "__main__":
-    DATASET_FOLDER = 'dataset/'
-    
-    # Read test data
-    test = pd.read_csv(os.path.join(DATASET_FOLDER, 'test.csv'))
-    
-    # Apply predictor function to each row
-    test['price'] = test.apply(
-        lambda row: predictor(row['sample_id'], row['catalog_content'], row['image_link']), 
-        axis=1
-    )
-    
-    # Select only required columns for output
-    output_df = test[['sample_id', 'price']]
-    
-    # Save predictions
-    output_filename = os.path.join(DATASET_FOLDER, 'test_out.csv')
+    model = joblib.load(MODEL_FILE)
+
+    y_pred = model.predict(X_test)
+    y_pred = np.clip(y_pred, 0, None)
+
+    output_df = pd.DataFrame({
+        'sample_id': test_df['sample_id'],
+        'price': y_pred
+    })
+
+    output_filename = os.path.join('outputs', 'test_predictions.csv')
     output_df.to_csv(output_filename, index=False)
-    
+
     print(f"Predictions saved to {output_filename}")
     print(f"Total predictions: {len(output_df)}")
     print(f"Sample predictions:\n{output_df.head()}")
+
+if __name__ == "__main__":
+    predict_prices()

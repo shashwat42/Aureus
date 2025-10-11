@@ -1,26 +1,18 @@
-# src/train.py
-
 import numpy as np
 import pandas as pd
-import os
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
-from models import get_random_forest  # Import your model factory
-
-FEATURES_DIR = 'outputs'
-DATASET_DIR = 'dataset'
-TRAIN_FEATURES_FILE = os.path.join(FEATURES_DIR, 'train_features.npy')
-TRAIN_FILE = os.path.join(DATASET_DIR, 'train_cleaned.csv')
-MODEL_FILE = os.path.join(FEATURES_DIR, 'rf_model.joblib')
+from config import TRAIN_FEATURES_FILE, TRAIN_CLEAN_FILE, MODEL_FILE
+from models import get_random_forest
 
 X = np.load(TRAIN_FEATURES_FILE)
-train_df = pd.read_csv(TRAIN_FILE)
+train_df = pd.read_csv(TRAIN_CLEAN_FILE)
 y = train_df['price'].values
 
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
 
-model = get_random_forest()  # Use the factory function from models.py
+model = get_random_forest()
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_val)
