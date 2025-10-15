@@ -1,32 +1,42 @@
+# --- Data ---
 /dataset/
 !/dataset/sample_*.csv
 
+# --- Outputs & model artifacts ---
+/outputs/
+*.npy
+*.npz
+*.joblib
+*.pkl
+*.h5
+*.onnx
+
+# --- Environments ---
 venv/
 .env/
 .venv/
 
+# --- Python cache ---
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.cache/
+.mypy_cache/
+.pytest_cache/
 
-*.log
-*.tmp
-*.bak
-
-.ipynb_checkpoints/
-
-outputs/
-models/
-checkpoints/
-runs/
+# --- Logs ---
 logs/
+*.log
+*.tfevents*
 
+# --- IDE & OS ---
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
+# --- Build / distribution ---
 build/
 dist/
 *.egg-info/
