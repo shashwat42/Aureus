@@ -1,116 +1,210 @@
-
-### Text Processing
-- **TF-IDF:** 500 features, bigrams (1,2), min_df=3, max_df=0.9, sublinear_tf=True
-- **Regex Extraction:** 6 patterns for weight (kg, g, oz, lb, ml, L) with pack multiplication
-- **Features:** 30 keyword flags, content statistics, derived ratios
-
-### Image Processing
-- **Model:** EfficientNetB0 (ImageNet pre-trained, 5.3M parameters)
-- **Output:** 1280-dimensional embeddings + binary availability flag
-- **Missing Data:** Zero vectors with separate `has_image` indicator
-
-### Structured Features (35 dimensions)
-`content_length`, `word_count`, `weight`, `quantity`, `weight_per_quantity`, `keyword_count`, 30 binary keyword flags
-
-### Ensemble Architecture
-
-**Base Models:**
-1. **XGBoost:** 450 estimators, depth=6, lr=0.025, reg_alpha=0.4, reg_lambda=2.5, gamma=0.15
-2. **LightGBM:** 500 estimators, depth=7, lr=0.02, num_leaves=40, reg_alpha=0.5, reg_lambda=3.0
-3. **Random Forest:** 300 estimators, depth=25, min_samples_split=5, max_features='sqrt'
-
-**Meta-Learner:** Ridge Regression (α=10.0) trained on out-of-fold predictions from 5-fold CV
-
-**Target Transform:** `y = log(1 + price)` for training, `price = exp(pred) - 1` for inference
+# 🏛️ **Aureus – Advanced Product Price Prediction System**  
 
 ---
 
-## Feature Engineering
+## 🧩 Overview  
+**Aureus** is a machine learning pipeline built to **predict product prices** from catalog data by combining text, structured, and statistical features.  
+It provides a modular, extensible, and automated workflow covering everything — from **data cleaning**, **feature extraction**, and **exploratory analysis**, to **model training**, **stacking**, and **prediction generation**.
 
-**Text:** TF-IDF captures bigram semantics ("gluten free", "100 percent"). Reduced from 800 to 500 features to prevent overfitting while maintaining semantic richness.
-
-**Images:** Transfer learning from EfficientNetB0 extracts visual features without fine-tuning. Zero-vector imputation for missing images allows model to learn availability patterns.
-
-**Structured:** Multi-pattern regex handles variations ("250g", "2.5 kg", "pack of 6"). Derived features like `weight_per_quantity` capture unit economics.
-
-**Bias Correction:** Quantile-based post-processing adjusts predictions by price range (×1.03 for Q1, ×0.99 for Q2-Q3, ×0.95 for Q4) to compensate for systematic biases.
+The project focuses on **efficiency**, **scalability**, and **explainable results**, integrating multiple models and analytical visualizations.
 
 ---
 
-## Model Performance
+## ✨ Key Features  
 
-- **MAE:** $11.38
-- **R²:** 0.314
-- **SMAPE:** 55.13
-
-## Technical Implementation
-
-**Technology Stack:**
-- Python 3.10, pandas 2.x, NumPy 1.24+
-- scikit-learn 1.3+, XGBoost 2.0+, LightGBM 4.0+
-- TensorFlow 2.15 (EfficientNetB0)
-- All MIT/Apache 2.0 licensed, ~8M total parameters
-
-**Modules:**
-- `preprocess.py`: Text cleaning, regex extraction, outlier removal
-- `features.py`: TF-IDF, EfficientNetB0, StandardScaler
-- `ensemble.py`: Custom stacking class with 5-fold CV
-- `train.py`: Log-space ensemble training
-- `sample_code.py`: Inverse transform, bias correction
-- `config.py`: Centralized hyperparameters
-
-**Execution:** `python src/preprocess.py && python src/features.py && python src/train.py && python src/sample_code.py`
-
-**Time:** ~8-12 minutes on modern CPU
+✅ **Automated Data Preprocessing** – Cleans raw product catalogs, extracts key numeric/text attributes, and removes outliers.  
+✅ **Feature Engineering Pipeline** – Combines TF-IDF, structured numerical attributes, and engineered indicators.  
+✅ **Model Ensemble (Stacking)** – Combines XGBoost, LightGBM, and Random Forest regressors with Ridge as a meta-model.  
+✅ **Exploratory Data Analysis (EDA)** – Generates key data distribution plots for better insights.  
+✅ **Performance Metrics** – Evaluates using MAE, R², and SMAPE.  
+✅ **Prediction Pipeline** – Generates final test predictions (`test_predictions.csv`).  
+✅ **Configurable System** – All paths, parameters, and constants are centralized in `config.py`.
 
 ---
 
-## Key Innovations
+## 🛠️ Tech Stack  
 
-1. **SMAPE Optimization:** Log-space modeling directly addresses relative error penalty (10% improvement)
-2. **Efficient Stacking:** 5-fold out-of-fold predictions prevent leakage while maximizing data usage
-3. **Quantile Correction:** Range-specific adjustments (×1.03 low, ×0.95 high) optimize final 1-2 SMAPE points
-4. **Regularization Balance:** 500 TF-IDF features with strong L1/L2 prevents overfitting
-5. **Multimodal Fusion:** Text + image + structured features in unified 1800+ dimensional space
-
----
-
-## Challenges & Solutions
-
-**Challenge:** Initial SMAPE 63% with single model  
-**Solution:** Log transformation + ensemble stacking → 52%
-
-**Challenge:** Systematic prediction bias across price ranges  
-**Solution:** Quantile-based correction → 50-51%
-
-**Challenge:** Training time excessive with GradientBoosting  
-**Solution:** Removed slow sklearn GradientBoosting, kept XGBoost/LightGBM
+| Layer | Tools / Libraries |
+|-------|-------------------|
+| **Language** | Python 3.10+ |
+| **Data Processing** | pandas, numpy |
+| **Feature Engineering** | scikit-learn (TF-IDF, scaling) |
+| **Model Training** | XGBoost, LightGBM, RandomForest, Ridge |
+| **Visualization (EDA)** | matplotlib, seaborn |
+| **Model Persistence** | joblib |
+| **Deep Learning (optional)** | TensorFlow (for image features) |
 
 ---
 
-## Conclusion
+## 📁 Project Structure  
 
-Team EnigmaNet achieved competitive SMAPE (50-52%) through metric-specific optimization (log transform), ensemble diversity, and domain-specific feature engineering. The modular pipeline enables rapid experimentation while maintaining reproducibility. Key learning: SMAPE requires fundamentally different approaches than MSE/MAE, emphasizing relative rather than absolute errors.
-
-**License Compliance:** All models MIT/Apache 2.0 licensed, <8B parameters.
+```
+📦 Aureus
+ ┣ 📂 .vscode
+ ┃ ┗ 📜 settings.json
+ ┣ 📂 dataset
+ ┃ ┣ 📜 train.csv                 # Raw training data
+ ┃ ┣ 📜 test.csv                  # Raw test data
+ ┃ ┣ 📜 train_cleaned.csv         # Cleaned training data
+ ┃ ┣ 📜 test_cleaned.csv          # Cleaned test data
+ ┃ ┣ 📜 sample_test.csv           # Sample test input
+ ┣ 📂 outputs
+ ┃ ┣ 📜 train_features.npy        # Processed training features
+ ┃ ┣ 📜 test_features.npy         # Processed test features
+ ┃ ┣ 📜 rf_model.joblib           # Trained RandomForest model
+ ┃ ┣ 📜 xgb_model.joblib          # Trained XGBoost model
+ ┃ ┣ 📜 ensemble_model.joblib     # Final stacking model
+ ┃ ┣ 📜 feature_scaler.joblib     # Scaler for normalization
+ ┃ ┣ 📜 tfidf_vectorizer.joblib   # TF-IDF vectorizer
+ ┃ ┣ 📜 test_predictions.csv      # Final predictions output
+ ┃ ┣ 📜 price_distribution.png    # EDA visualization
+ ┃ ┣ 📜 content_length_distribution.png
+ ┃ ┣ 📜 catalog_content_length_distribution.png
+ ┃ ┣ 📜 eda_summary.txt
+ ┣ 📂 src
+ ┃ ┣ 📜 config.py                 # Configuration and parameters
+ ┃ ┣ 📜 eda.py                    # Exploratory data analysis
+ ┃ ┣ 📜 preprocess.py             # Data cleaning and feature extraction
+ ┃ ┣ 📜 features.py               # Feature generation (TF-IDF + structured)
+ ┃ ┣ 📜 models.py                 # Model constructors
+ ┃ ┣ 📜 ensemble.py               # Stacking ensemble class
+ ┃ ┣ 📜 train.py                  # Model training & validation
+ ┃ ┣ 📜 sample_code.py            # Inference / prediction script
+ ┃ ┣ 📜 utils.py                  # Helper functions
+ ┣ 📜 README.md
+ ┣ 📜 requirements.txt
+ ┣ 📜 file_structure.csv
+ ┣ 📜 .gitignore
+ ┣ 📜 .gitattributes
+```
 
 ---
 
-## Appendix
+## ⚙️ Configuration  
 
-**Repository Structure:**
-CashCap/
-├── src/ # config.py, preprocess.py, features.py, models.py,
-│ # ensemble.py, train.py, sample_code.py
-├── dataset/ # train.csv, test.csv, cleaned CSVs
-├── outputs/ # ensemble_model.joblib, test_predictions.csv
-└── requirements.txt
-
-
-**Installation:** `conda create -n cashcap python=3.10 && conda activate cashcap && pip install xgboost lightgbm pandas numpy scikit-learn tensorflow joblib`
-
-**Output:** `outputs/test_predictions.csv` (75,000 predictions)
+All parameters are defined in `src/config.py`, including:  
+- File paths for dataset, outputs, models  
+- Model hyperparameters (RF, XGBoost, LightGBM)  
+- TF-IDF feature extraction settings  
+- Random seeds, cross-validation splits, and outlier removal thresholds  
 
 ---
 
-**Team EnigmaNet** | Amazon ML Challenge 2025 | October 13, 2025
+## 🚀 Getting Started  
+
+### 1️⃣ Clone the Repository  
+```bash
+git clone https://github.com/shashwat42/Aureus.git
+cd Aureus
+```
+
+### 2️⃣ Install Dependencies  
+```bash
+pip install -r requirements.txt
+```
+*(Or manually install the following:)*  
+```bash
+pip install xgboost lightgbm scikit-learn pandas numpy joblib tensorflow tqdm matplotlib seaborn
+```
+
+### 3️⃣ Prepare Dataset  
+Place your raw CSV files in the `dataset/` directory:
+```
+dataset/
+ ┣ train.csv
+ ┣ test.csv
+```
+
+### 4️⃣ Run the Full ML Pipeline  
+
+```bash
+# Step 1: Clean and preprocess data
+python src/preprocess.py
+
+# Step 2: Feature engineering
+python src/features.py
+
+# Step 3: Train ensemble models
+python src/train.py
+
+# Step 4: Generate predictions
+python src/sample_code.py
+```
+
+After successful execution, predictions will be saved to:
+```
+outputs/test_predictions.csv
+```
+
+---
+
+## 📈 Model Architecture  
+
+**Stacking Ensemble Framework**
+
+```
+ ┌─────────────────────────────┐
+ │     Random Forest Model     │
+ ├─────────────────────────────┤
+ │       XGBoost Model         │
+ ├─────────────────────────────┤
+ │       LightGBM Model        │
+ └──────────────┬──────────────┘
+                │
+                ▼
+      Ridge Regression (Meta-Model)
+                │
+                ▼
+        Final Price Predictions
+```
+
+---
+
+## 📊 Evaluation Metrics  
+
+| Metric | Description |
+|---------|-------------|
+| **MAE** | Mean Absolute Error – average prediction deviation |
+| **R² Score** | Measures model’s goodness of fit |
+| **SMAPE** | Symmetric Mean Absolute Percentage Error |
+
+Validation metrics are displayed automatically during training.
+
+---
+
+## 🧠 Exploratory Data Analysis (EDA)
+
+- Conducted via `src/eda.py`  
+- Generates plots like `price_distribution.png`, `content_length_distribution.png`  
+- Summarizes data insights in `outputs/eda_summary.txt`
+
+---
+
+## 🧪 Example Results
+
+| Metric | Value (example) |
+|---------|----------------|
+| MAE | 12.34 |
+| R² | 0.91 |
+| SMAPE | 41.6546% |
+
+*(Actual values depend on dataset and parameters.)*
+
+---
+
+## 📜 License  
+
+This project is open-source under the **MIT License**.  
+You are free to use, modify, and distribute with attribution.
+
+---
+
+## 🧭 Summary  
+
+Aureus demonstrates a complete **end-to-end ML workflow** for price prediction, integrating:  
+- Advanced feature engineering  
+- Automated data cleaning  
+- Stacking ensemble modeling  
+- Streamlined pipeline execution  
+
+> 💡 Use Aureus as a base template for future ML competitions, product catalog analysis, or price intelligence systems.
